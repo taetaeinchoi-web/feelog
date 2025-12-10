@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background-color: #fff;
+    /* Always white background */
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.year-container {
+    width: 100%;
+    max-width: 1000px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.year-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111;
+}
+
+.close-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 30px;
+    color: #999;
+    text-decoration: none;
+    line-height: 1;
+    padding: 10px;
+}
+
+.year-grid {
+    display: grid;
+    /* 3 columns x 4 rows for desktop */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    /* Gap between months */
+}
+
+
+
+.month-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    /* Gap between days */
+}
+
+.dot {
+    aspect-ratio: 1;
+    /* Make it square/circle */
+    border-radius: 50%;
+    background-color: transparent;
+    /* Default */
+}
+
+/* Empty spacer for alignment */
+.dot.empty {
+    visibility: hidden;
+}
+
+/* Day with no record - Invisible to show ONLY colored circles? 
+   Or faint dot?
+   "Color circles arranged... remove text... ONLY color circles"
+   This implies invisible spacers for days without records.
+*/
+.dot.empty-day {
+    visibility: hidden;
+}
+
+/* Wait, if I hide empty days, user sees gaps. That's "Calendar Position". 
+   Correct. */
+
+/* Responsive */
+@media (max-width: 768px) {
+    .year-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 columns */
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .year-grid {
+        grid-template-columns: repeat(1, 1fr);
+        /* 1 column */
+        gap: 30px;
+    }
+
+    .year-title {
+        font-size: 20px;
+    }
+}
+
+.share-btn-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    color: rgba(0, 0, 0, 0.5);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s, opacity 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    z-index: 100;
+    padding: 10px;
+}
+
+.share-btn-floating:hover {
+    color: #000;
+}

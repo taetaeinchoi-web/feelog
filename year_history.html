@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 한해 – FEELOG</title>
+    <link rel="stylesheet" href="year_history.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+</head>
+
+<body>
+
+    <div class="year-container">
+        <header class="header">
+            <h1 class="year-title" id="year-title"></h1>
+            <a href="calendar.html" class="close-btn">×</a>
+        </header>
+
+        <div id="year-grid" class="year-grid">
+            <!-- 12 Months will be generated here -->
+        </div>
+    </div>
+
+    <div id="capture-container">
+        <!-- Capture area needs to include the title and grid, but maybe exclude the buttons for the capture? -->
+        <!-- Actually, html2canvas captures the element. We probably want to capture .year-container BUT without the close button and share button ideally. -->
+        <!-- Or we just hide them before capture. -->
+    </div>
+
+    <a href="#" id="share-btn" class="share-btn-floating">공유하기</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        const records = JSON.parse(localStorage.getItem("feelog") || "[]");
+        const yearGrid = document.getElementById("year-grid");
+        const currentYear = new Date().getFullYear();
+
+        document.getElementById("year-title").textContent = currentYear;
+
+        // Group records by date string "YYYY-MM-DD"
+        const recordsMap = {};
+        records.forEach(r => {
+            const d = new Date(r.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            recordsMap[key] = r;
+        });
+
+        const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+        function renderYear() {
+            yearGrid.innerHTML = "";
+
+            for (let m = 0; m < 12; m++) {
+                const monthDiv = document.createElement("div");
+                monthDiv.className = "month-block";
+
+                // Month header could be removed if purely circles are requested, 
+                // but usually "minimalist" allows a tiny label or none. 
+                // User said: "remove all text/numbers... only color circles".
+                // So NO month title inside. just the grid.
+
+                const daysDiv = document.createElement("div");
+                daysDiv.className = "month-days";
+
+                const firstDay = new Date(currentYear, m, 1);
+                const lastDay = new Date(currentYear, m + 1, 0);
+                const startDayOfWeek = firstDay.getDay(); // 0=Sun
+                const totalDays = lastDay.getDate();
+
+                // Empty slots for start padding
+                for (let i = 0; i < startDayOfWeek; i++) {
+                    const empty = document.createElement("div");
+                    empty.className = "dot empty";
+                    daysDiv.appendChild(empty);
+                }
+
+                // Days
+                for (let d = 1; d <= totalDays; d++) {
+                    const dateKey = `${currentYear}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dot = document.createElement("div");
+                    dot.className = "dot";
+
+                    if (recordsMap[dateKey]) {
+                        dot.style.backgroundColor = recordsMap[dateKey].color;
+                        dot.title = `${m + 1}월 ${d}일`; // Tooltip just in case
+                    } else {
+                        dot.classList.add("empty-day"); // Valid day but no record
+                        // Should it be invisible or just a placeholder?
+                        // "colors... arranged according to calendar"
+                        // Usually empty days are invisible or very faint grey to hold structure?
+                        // User said: "View recorded colors... arranged... remove text/numbers... ONLY color circles"
+                        // This implies ONLY filled days show? 
+                        // But if I hide empty days completely, the grid structure breaks!
+                        // To "keep calendar position", I MUST render empty slots as invisible spacers.
+                    }
+                    daysDiv.appendChild(dot);
+                }
+
+                monthDiv.appendChild(daysDiv);
+                yearGrid.appendChild(monthDiv);
+            }
+        }
+
+        renderYear();
+
+        // Share Logic
+        const shareBtn = document.getElementById("share-btn");
+        const closeBtn = document.querySelector(".close-btn");
+        const container = document.querySelector(".year-container");
+
+        shareBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            // Hide controls for capture
+            shareBtn.style.opacity = "0";
+            closeBtn.style.opacity = "0";
+
+            try {
+                const canvas = await html2canvas(document.body, { // Capture body or container
+                    scale: 2,
+                    backgroundColor: "#ffffff", // Force white bg
+                    ignoreElements: (element) => {
+                        // Double check we ignore buttons if they render
+                        if (element.id === 'share-btn' || element.classList.contains('close-btn')) return true;
+                        return false;
+                    }
+                });
+
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return;
+
+                    const file = new File([blob], `feelog_year_${currentYear}.png`, { type: "image/png" });
+
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: `FEELOG ${currentYear}`,
+                                text: '나의 한해 색상 기록'
+                            });
+                        } catch (err) {
+                            console.log("Share canceled/failed", err);
+                        }
+                    } else {
+                        const link = document.createElement("a");
+                        link.download = `feelog_year_${currentYear}.png`;
+                        link.href = URL.createObjectURL(blob);
+                        link.click();
+                    }
+
+                    // Restore
+                    shareBtn.style.opacity = "1";
+                    closeBtn.style.opacity = "1";
+                });
+            } catch (err) {
+                console.error(err);
+                shareBtn.style.opacity = "1";
+                closeBtn.style.opacity = "1";
+            }
+        });
+    </script>
+</body>
+
+</html>

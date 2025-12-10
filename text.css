@@ -1,0 +1,313 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+  color: #000;
+  position: relative;
+}
+
+body.dark-bg {
+  color: #fff;
+}
+
+/* 배경 이미지 레이어 */
+.bg-image {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+body.has-bg-image .center-box {
+  position: relative;
+  z-index: 10;
+}
+
+.center-box {
+  width: 100%;
+  max-width: 500px;
+  padding: 40px 24px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+/* 색상 의미 뱃지 */
+.color-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 10px 18px;
+  border-radius: 50px;
+  margin-bottom: 30px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.4s ease;
+}
+
+.dark-bg .color-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.color-badge.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.badge-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.badge-text {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* 질문 */
+.ask {
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-bottom: 36px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dark-bg .ask {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 사진 섹션 */
+.photo-section {
+  margin-bottom: 24px;
+}
+
+.photo-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 28px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: inherit;
+}
+
+.dark-bg .photo-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.photo-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.photo-btn.hidden {
+  display: none;
+}
+
+.photo-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 사진 미리보기 */
+.photo-preview {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.photo-preview.hidden {
+  display: none;
+}
+
+.photo-preview img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.remove-photo {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.remove-photo:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* 텍스트 입력 */
+.input {
+  width: 100%;
+  font-size: 20px;
+  font-family: inherit;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 16px;
+  padding: 20px;
+  color: inherit;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.6;
+  transition: background 0.2s ease;
+}
+
+.input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.dark-bg .input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 저장 버튼 */
+.save-btn {
+  margin-top: 30px;
+  padding: 16px 48px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  font-size: 16px;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.03);
+}
+
+/* 플라이 카드 애니메이션 */
+.fly-card {
+  position: fixed;
+  display: none;
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.5s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 모바일 */
+/* 모바일 */
+@media (max-width: 768px) {
+  .center-box {
+    padding: 30px 24px;
+    max-width: 100%;
+  }
+
+  .ask {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .center-box {
+    padding: 20px 16px;
+  }
+
+  .color-badge {
+    padding: 8px 14px;
+    margin-bottom: 24px;
+  }
+
+  .badge-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .badge-text {
+    font-size: 12px;
+  }
+
+  .ask {
+    font-size: 21px;
+    line-height: 1.4;
+    margin-bottom: 24px;
+  }
+
+  .photo-btn {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .photo-icon {
+    font-size: 28px;
+  }
+
+  .photo-preview img {
+    max-height: 200px;
+  }
+
+  .input {
+    font-size: 17px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .save-btn {
+    padding: 14px 40px;
+    font-size: 15px;
+    width: 100%;
+    margin-top: 20px;
+  }
+}

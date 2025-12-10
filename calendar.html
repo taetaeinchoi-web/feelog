@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기록 캘린더 – FEELOG</title>
+    <link rel="stylesheet" href="calendar.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+</head>
+
+<body>
+
+    <div class="container">
+        <header class="header">
+            <a href="index.html" class="back-link">← 돌아가기</a>
+            <h1 class="title">FEELOG</h1>
+        </header>
+
+        <div class="month-nav">
+            <button id="prev-month" class="nav-btn">‹</button>
+            <h2 id="month-title" class="month-title"></h2>
+            <button id="next-month" class="nav-btn">›</button>
+        </div>
+
+        <div class="calendar">
+            <div class="weekdays">
+                <span>일</span>
+                <span>월</span>
+                <span>화</span>
+                <span>수</span>
+                <span>목</span>
+                <span>금</span>
+                <span>토</span>
+            </div>
+            <div id="days" class="days"></div>
+        </div>
+
+        <div id="detail-modal" class="detail-modal">
+            <div id="interaction-layer" class="interaction-layer"></div>
+            <div class="modal-content" id="modal-content">
+                <div id="modal-photo-container" class="modal-photo-container hidden">
+                    <img id="modal-photo" src="" alt="기록 사진">
+                </div>
+                <p id="modal-text" class="modal-text"></p>
+                <p id="modal-date" class="modal-date"></p>
+                <!-- Buttons will be grouped in a container by JS -->
+                <button id="close-modal" class="close-btn">돌아가기</button>
+            </div>
+        </div>
+
+        <a href="year_history.html" class="year-link-btn">올 한해 →</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        let currentYear, currentMonth;
+        const records = JSON.parse(localStorage.getItem("feelog") || "[]");
+        const recordsByDate = {};
+
+        // Setup Share Button and Container
+        const modalContent = document.getElementById("modal-content");
+        const closeBtn = document.getElementById("close-modal");
+
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.className = "buttons-container";
+
+        const shareBtn = document.createElement("button");
+        shareBtn.id = "share-btn";
+        shareBtn.className = "share-btn";
+        shareBtn.textContent = "공유하기";
+
+        // Re-arrange DOM for buttons
+        modalContent.appendChild(buttonsContainer);
+        buttonsContainer.appendChild(shareBtn);
+        buttonsContainer.appendChild(closeBtn);
+
+        records.forEach(r => {
+            const d = new Date(r.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            recordsByDate[key] = r;
+        });
+
+        function init() {
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth();
+            renderCalendar();
+
+            // Share Listener
+            shareBtn.addEventListener("click", shareRecord);
+        }
+
+        function renderCalendar() {
+            const monthTitle = document.getElementById("month-title");
+            const daysContainer = document.getElementById("days");
+
+            monthTitle.textContent = `${currentYear}년 ${currentMonth + 1}월`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startDayOfWeek = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            const today = new Date();
+            const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            daysContainer.innerHTML = "";
+
+            // Empty days
+            for (let i = 0; i < startDayOfWeek; i++) {
+                const empty = document.createElement("div");
+                empty.className = "day empty";
+                daysContainer.appendChild(empty);
+            }
+
+            const centerRow = 3;
+            const centerCol = 3;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const record = recordsByDate[dateKey];
+
+                const dayEl = document.createElement("div");
+                dayEl.className = "day";
+
+                const cellIndex = startDayOfWeek + (day - 1);
+                const row = Math.floor(cellIndex / 7);
+                const col = cellIndex % 7;
+                const dist = Math.sqrt(Math.pow(row - centerRow, 2) + Math.pow(col - centerCol, 2));
+
+                dayEl.style.animationDelay = `${dist * 0.05}s`;
+
+                if (dateKey === todayKey) {
+                    dayEl.classList.add("today");
+                }
+
+                if (record) {
+                    dayEl.classList.add("has-record");
+                    dayEl.style.backgroundColor = record.color;
+                    dayEl.addEventListener("click", (e) => expandDay(e, record, dayEl));
+                }
+
+                const dayNum = document.createElement("span");
+                dayNum.className = "day-num";
+                dayNum.textContent = day;
+                dayEl.appendChild(dayNum);
+
+                daysContainer.appendChild(dayEl);
+            }
+        }
+
+        function expandDay(e, record, element) {
+            const modal = document.getElementById("detail-modal");
+            const layer = document.getElementById("interaction-layer");
+            const content = document.getElementById("modal-content");
+            const closeBtn = document.getElementById("close-modal");
+
+            const modalText = document.getElementById("modal-text");
+            const modalDate = document.getElementById("modal-date");
+            const modalPhotoContainer = document.getElementById("modal-photo-container");
+            const modalPhoto = document.getElementById("modal-photo");
+
+            // Set content
+            modalText.textContent = record.text || "";
+            const d = new Date(record.date);
+            modalDate.textContent = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+
+            // Image handling (Updated)
+            if (record.photo) {
+                modalPhoto.src = record.photo;
+                modalPhotoContainer.classList.remove("hidden");
+            } else {
+                modalPhotoContainer.classList.add("hidden");
+                modalPhoto.src = "";
+            }
+
+            // 1. Get initial rect
+            const rect = element.getBoundingClientRect();
+
+            // 2. Set layer to initial position
+            layer.style.transition = 'none';
+            layer.style.top = `${rect.top}px`;
+            layer.style.left = `${rect.left}px`;
+            layer.style.width = `${rect.width}px`;
+            layer.style.height = `${rect.height}px`;
+            layer.style.backgroundColor = record.color;
+            layer.style.borderRadius = '50%';
+
+            modal.classList.add("active");
+
+            // 3. Force reflow
+            layer.offsetHeight;
+
+            // 4. Animate to full screen
+            layer.style.transition = 'all 0.5s ease-in-out';
+            layer.style.top = '0';
+            layer.style.left = '0';
+            layer.style.width = '100vw';
+            layer.style.height = '100vh';
+            layer.style.borderRadius = '0';
+
+            // 5. Show content
+            setTimeout(() => {
+                content.classList.add("show");
+            }, 300);
+
+            // Close handler
+            closeBtn.onclick = () => closeDay(element, record);
+        }
+
+        function closeDay(element, record) {
+            const modal = document.getElementById("detail-modal");
+            const layer = document.getElementById("interaction-layer");
+            const content = document.getElementById("modal-content");
+
+            // 1. Hide content
+            content.classList.remove("show");
+
+            // 2. Animate layer back
+            const rect = element.getBoundingClientRect();
+
+            setTimeout(() => {
+                layer.style.top = `${rect.top}px`;
+                layer.style.left = `${rect.left}px`;
+                layer.style.width = `${rect.width}px`;
+                layer.style.height = `${rect.height}px`;
+                layer.style.borderRadius = '50%';
+            }, 100);
+
+            // 3. Hide modal after transition
+            setTimeout(() => {
+                modal.classList.remove("active");
+            }, 600);
+        }
+
+        async function shareRecord() {
+            const modal = document.getElementById("detail-modal");
+            const closeBtn = document.getElementById("close-modal");
+            const shareBtn = document.getElementById("share-btn");
+
+            // 1. Hide buttons
+            closeBtn.style.opacity = "0";
+            shareBtn.style.opacity = "0";
+
+            try {
+                // 2. Capture
+                const canvas = await html2canvas(modal, {
+                    scale: 2, // High quality
+                    useCORS: true,
+                    backgroundColor: null // Transparent
+                });
+
+                // 3. Convert to blob
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return;
+
+                    const file = new File([blob], "feelog_record.png", { type: "image/png" });
+
+                    // 4. Share or Download
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'FEELOG',
+                                text: '오늘의 감정 기록'
+                            });
+                        } catch (err) {
+                            console.log("Share skipped/failed", err);
+                        }
+                    } else {
+                        // Fallback
+                        const link = document.createElement("a");
+                        link.download = "feelog_record.png";
+                        link.href = URL.createObjectURL(blob);
+                        link.click();
+                    }
+
+                    // 5. Restore
+                    closeBtn.style.opacity = "1";
+                    shareBtn.style.opacity = "1";
+                });
+
+            } catch (e) {
+                console.error("Capture failed:", e);
+                closeBtn.style.opacity = "1";
+                shareBtn.style.opacity = "1";
+            }
+        }
+
+        document.getElementById("prev-month").addEventListener("click", () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+
+        document.getElementById("next-month").addEventListener("click", () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+
+        init();
+    </script>
+
+</body>
+
+</html>

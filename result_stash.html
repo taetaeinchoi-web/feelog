@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>보관함 – FEELOG</title>
+  <link rel="stylesheet" href="result_stash.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+</head>
+
+<body>
+
+  <div class="frame">
+    <header class="top">
+      <a href="index.html" class="back">← 오늘 다시 기록하기</a>
+    </header>
+
+    <main class="stash-main">
+      <section class="box-area">
+        <h1 class="title">오늘의 기록이 보관함에 담겼어요</h1>
+        <p class="subtitle">색과 사진이 하루하루를 기억해요</p>
+
+        <div class="stash-box">
+          <div id="layers" class="layers"></div>
+        </div>
+      </section>
+
+      <section class="cta-area">
+        <p class="guide">쌓여온 기록이 궁금하다면</p>
+        <button id="open" class="open-btn">전체 보기</button>
+      </section>
+
+      <!-- New CTA for Year View -->
+      <button id="year-view-btn" class="year-view-btn">나의 한해 보기</button>
+
+      <!-- Year View Overlay -->
+      <div id="year-overlay" class="year-overlay">
+        <div class="year-content">
+          <button id="close-year" class="close-year-btn">×</button>
+          <div id="year-grid" class="year-grid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const focusId = params.get("focus") || null;
+
+    const arr = JSON.parse(localStorage.getItem("feelog") || "[]");
+    const layersEl = document.getElementById("layers");
+
+    if (!arr.length) {
+      layersEl.innerHTML = '<p class="empty">아직 보관된 기록이 없어요.<br>첫 하루를 기록해볼까요?</p>';
+    } else {
+      const latest8 = arr.slice(-8);
+      latest8.forEach((e, index) => {
+        const div = document.createElement("div");
+        div.className = "layer";
+        div.style.bottom = (12 + index * 22) + "px";
+
+        // 사진이 있으면 배경 이미지, 없으면 색상
+        if (e.photo) {
+          div.style.backgroundImage = `url(${e.photo})`;
+          div.classList.add("has-photo");
+        } else {
+          div.style.background = e.color;
+        }
+
+        if (e.id === focusId) {
+          div.classList.add("highlight");
+        }
+
+        layersEl.appendChild(div);
+      });
+    }
+
+    document.getElementById("open").addEventListener("click", () => {
+      location.href = focusId ? ("result.html?id=" + focusId) : "result.html";
+    });
+
+    // Year View Logic
+    const yearBtn = document.getElementById("year-view-btn");
+    const yearOverlay = document.getElementById("year-overlay");
+    const closeYear = document.getElementById("close-year");
+    const yearGrid = document.getElementById("year-grid");
+
+    yearBtn.addEventListener("click", () => {
+      renderYearView();
+      yearOverlay.classList.add("active");
+    });
+
+    closeYear.addEventListener("click", () => {
+      yearOverlay.classList.remove("active");
+    });
+
+    function renderYearView() {
+      yearGrid.innerHTML = "";
+      const now = new Date();
+      const year = now.getFullYear();
+
+      // Map records by date string "YYYY-MM-DD"
+      const recordMap = {};
+      arr.forEach(r => {
+        const d = new Date(r.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        recordMap[key] = r;
+      });
+
+      // 12 Months
+      for (let m = 0; m < 12; m++) {
+        const monthDiv = document.createElement("div");
+        monthDiv.className = "month-block";
+
+        // Days in month
+        const daysInMonth = new Date(year, m + 1, 0).getDate();
+        const firstDay = new Date(year, m, 1).getDay();
+
+        // Grid for days
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement("div");
+          empty.className = "year-day empty";
+          monthDiv.appendChild(empty);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "year-day";
+
+          const key = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          if (recordMap[key]) {
+            dayEl.style.backgroundColor = recordMap[key].color;
+            dayEl.classList.add("filled");
+          }
+
+          monthDiv.appendChild(dayEl);
+        }
+
+        yearGrid.appendChild(monthDiv);
+      }
+    }
+  </script>
+
+</body>
+
+</html>

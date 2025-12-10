@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>기록 모아보기 – FEELOG</title>
+  <link rel="stylesheet" href="result.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+</head>
+
+<body>
+
+  <div class="frame">
+    <header class="top">
+      <a class="back" href="index.html">← 오늘 기록하기</a>
+    </header>
+
+    <main class="layout">
+      <section class="left">
+        <div class="poster">
+          <p class="phrase">매일의 색이 모여<br>나만의 한 해가 돼요</p>
+          <div id="dots" class="poster-dots"></div>
+        </div>
+      </section>
+
+      <section class="right">
+        <h2 class="section-title">지금까지의 기록</h2>
+        <p class="section-desc">
+          동그라미 하나가 하루를 뜻해요.<br>
+          눌러서 그날의 기록을 다시 볼 수 있어요.
+        </p>
+        <p id="empty" class="empty" hidden>
+          아직 기록된 하루가 없어요.<br>첫 기록을 시작해볼까요?
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const focusId = params.get("id") || null;
+
+    // Apply Theme Color
+    const themeColor = localStorage.getItem("feelog_theme_color");
+    if (themeColor) {
+      document.body.style.background = themeColor;
+    }
+
+    const arr = JSON.parse(localStorage.getItem("feelog") || "[]");
+    const dotsEl = document.getElementById("dots");
+    const emptyEl = document.getElementById("empty");
+
+    if (!arr.length) {
+      emptyEl.hidden = false;
+    } else {
+      emptyEl.hidden = true;
+
+      arr.forEach(e => {
+        const b = document.createElement("button");
+        b.className = "dot";
+
+        // 사진이 있으면 배경 이미지, 없으면 색상
+        if (e.photo) {
+          b.style.backgroundImage = `url(${e.photo})`;
+          b.classList.add("has-photo");
+        } else {
+          b.style.background = e.color;
+        }
+
+        if (e.id === focusId) {
+          b.classList.add("dot-focus");
+        }
+
+        b.title = new Date(e.date).toLocaleDateString("ko-KR");
+        b.addEventListener("click", () => {
+          location.href = "history.html?id=" + e.id;
+        });
+
+        dotsEl.appendChild(b);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
