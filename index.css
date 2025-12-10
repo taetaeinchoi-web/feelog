@@ -193,7 +193,8 @@ body {
   }
 
   .color-circle {
-    width: 42px;
-    height: 42px;
+    width: 65px;
+    /* Increased from 42px */
+    height: 65px;
   }
 }
