@@ -117,11 +117,19 @@
             closeBtn.style.opacity = "0";
 
             try {
-                const canvas = await html2canvas(document.body, { // Capture body or container
+                // Scroll to top to ensure clean capture
+                window.scrollTo(0, 0);
+
+                // Use document.documentElement for full height calculation
+                const fullHeight = document.documentElement.scrollHeight;
+
+                const canvas = await html2canvas(document.body, {
                     scale: 2,
-                    backgroundColor: "#ffffff", // Force white bg
+                    backgroundColor: "#ffffff",
+                    height: fullHeight,
+                    windowHeight: fullHeight,
+                    y: 0,
                     ignoreElements: (element) => {
-                        // Double check we ignore buttons if they render
                         if (element.id === 'share-btn' || element.classList.contains('close-btn')) return true;
                         return false;
                     }
